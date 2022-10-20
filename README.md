@@ -25,3 +25,14 @@ terraform init
 terraform plan
 terraform apply
 ```
+We have some option for command terraform plan:
+```
+if you have many resource, to speed up processing
+- terraform plan -parallelism=n
+if you dont't want type yes or no:
+- terraform apply -auto-approve
+if you want save result of terraform plan
+- terraform plan -out plan.out
+- terraform show -json plan.out > plan.json
+
+```
