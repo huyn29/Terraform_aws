@@ -7,3 +7,6 @@ output "private_sub" {
 output "hsg" {
   value = aws_security_group.huyn_sg.id
 }
+output "vpc_id" {
+  value = aws_vpc.huyn_vpc.id
+}

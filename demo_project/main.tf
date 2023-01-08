@@ -36,17 +36,23 @@ resource "aws_key_pair" "auth" {
 resource "aws_instance" "instance1" {
   ami = data.aws_ami.ami_linux.id
   instance_type = "t2.micro"
-  subnet_id = module.huyn_vpc.public_sub[1]
+  subnet_id = module.huyn_vpc.private_sub[1]
   security_groups = [module.huyn_vpc.hsg]
   associate_public_ip_address = true
   key_name = aws_key_pair.auth.id
   provisioner "local-exec" {
     on_failure = fail #continue 
-    command = "echo ip: ${aws_instance.instance1.public_ip} > key_ip/public_ip.txt"
+    command = "echo ip: ${aws_instance.instance1.public_ip} > public_ip.txt"
   }
   tags = {
     "Name" = "huyn"
   }
+}
+module "application_lb" {
+  source                     = "../_module/elb"
+  subnets                    = [module.huyn_vpc.public_sub[0],module.huyn_vpc.public_sub[1],module.huyn_vpc.public_sub[2]]
+  vpc_id = module.huyn_vpc.vpc_id
+  security_groups = [module.huyn_vpc.hsg]
 }
 # resource "null_resource" "execute" {
 #   connection {
