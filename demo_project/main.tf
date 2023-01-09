@@ -47,12 +47,20 @@ resource "aws_instance" "instance1" {
   tags = {
     "Name" = "huyn"
   }
+  user_data = <<-EOF
+                #!/bin/bash
+                sudo yum update -y
+                sudo yum install httpd -y
+                sudo service httpd start
+                sudo bash -c  "echo '<center><h1>I am huy</h1></center>' > /var/www/html/index.html"
+                EOF
 }
 module "application_lb" {
   source                     = "../_module/elb"
-  subnets                    = [module.huyn_vpc.public_sub[0],module.huyn_vpc.public_sub[1],module.huyn_vpc.public_sub[2]]
+  subnets                    = [module.huyn_vpc.private_sub[0],module.huyn_vpc.private_sub[1],module.huyn_vpc.private_sub[2]]
   vpc_id = module.huyn_vpc.vpc_id
   security_groups = [module.huyn_vpc.hsg]
+  instance_id = aws_instance.instance1.id
 }
 # resource "null_resource" "execute" {
 #   connection {

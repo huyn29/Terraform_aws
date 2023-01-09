@@ -36,25 +36,25 @@ resource "aws_lb_target_group" "lb_target_group" {
   }
 }
 
-# create a listener on port 80 with redirect action
-resource "aws_lb_listener" "lb_http_listener" {
-  load_balancer_arn = aws_lb.huyn_lb.arn
-  port = "80"
-  protocol = "HTTP"
-  default_action {
-    type = "redirect"
-    redirect {
-      port = 443
-      protocol = "HTTPS"
-      status_code = "HTTP_301"
-    }
-  }
-}
-# create a listener on port 443 with forward action
+# # create a listener on port 80 with redirect action
+# resource "aws_lb_listener" "lb_http_listener" {
+#   load_balancer_arn = aws_lb.huyn_lb.arn
+#   port = "80"
+#   protocol = "HTTP"
+#   default_action {
+#     type = "redirect"
+#     redirect {
+#       port = 443
+#       protocol = "HTTPS"
+#       status_code = "HTTP_301"
+#     }
+#   }
+# }
+# create a listener on port 80 with forward action
 resource "aws_lb_listener" "huyn_lb" {
   load_balancer_arn = aws_lb.huyn_lb.arn
-  port              = 443
-  protocol          = "HTTPS"
+  port              = 80
+  protocol          = "HTTP"
   #certificate_arn   = "arn:aws:iam::187416307283:server-certificate/test_cert_rab3wuqwgja25ct3n4jdj2tzu4"
   #alpn_policy       = "HTTP2Preferred"
 
@@ -62,4 +62,12 @@ resource "aws_lb_listener" "huyn_lb" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.lb_target_group.arn
   }
+}
+
+resource "aws_lb_target_group_attachment" "this" {
+  # count            = length(data.aws_instances.this.ids)
+  target_group_arn = aws_lb_target_group.lb_target_group.arn
+  # target_id        = data.aws_instances.this.ids[count.index] #data.aws_instance.this.id
+  target_id = var.instance_id
+  port             = 80
 }

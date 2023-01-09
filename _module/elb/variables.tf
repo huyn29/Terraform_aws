@@ -1,7 +1,5 @@
 
-variable "security_groups" {
-
-}
+variable "security_groups" {}
 
 variable "load_balancer_type" {
   description = "Application or Network type LB"
@@ -37,7 +35,7 @@ variable "lb_protocol" {
 variable "lb_target_type" {
   description = "Target type ip (ALB/NLB), instance (Autosaling group)"
   type        = string
-  default     = "ip"
+  default     = "instance"
 }
 
 variable "vpc_id" {
@@ -45,4 +43,5 @@ variable "vpc_id" {
   type        = string
   default     = null
 }
+variable "instance_id" {}
 
