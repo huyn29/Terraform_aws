@@ -1,34 +1,34 @@
 # Create a application load balancer
 resource "aws_lb" "huyn_lb" {
-  name               = "huyn-lb"
+  name               = var.lb_name
   internal           = false
   load_balancer_type = var.load_balancer_type
-  security_groups    =  var.security_groups  #[aws_security_group.sg_lb.id]
-  subnets            = var.subnets   #[for subnet in aws_subnet.public : subnet.id]
+  security_groups    = var.security_groups #[aws_security_group.sg_lb.id]
+  subnets            = var.subnets         #[for subnet in aws_subnet.public : subnet.id]
 
-  enable_deletion_protection = var.enable_deletion_protection 
+  enable_deletion_protection = false
   tags = {
-    "Name" = "huyn-lb"
+    "Name" = "${var.lb_name}"
   }
 }
 # Create target group
 resource "aws_lb_target_group" "lb_target_group" {
-  name        = "tg-huyn-lb"
-  port        = var.lb_target_port
-  protocol    = var.lb_protocol    
-  target_type = var.lb_target_type 
+  name        = "tg-${var.lb_name}"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = var.lb_target_type
   vpc_id      = var.vpc_id
   depends_on  = [aws_lb.huyn_lb]
   tags = {
-    "Name" = "tg-huyn_lb"
+    "Name" = "tg-${var.lb_name}"
   }
   health_check {
-    enabled = true
-    interval = 300
-    path = "/"
-    timeout = 60
-    matcher = 200
-    healthy_threshold = 5
+    enabled             = true
+    interval            = 300
+    path                = "/"
+    timeout             = 60
+    matcher             = 200
+    healthy_threshold   = 5
     unhealthy_threshold = 5
   }
   lifecycle {
@@ -64,10 +64,9 @@ resource "aws_lb_listener" "huyn_lb" {
   }
 }
 
-resource "aws_lb_target_group_attachment" "this" {
-  # count            = length(data.aws_instances.this.ids)
+resource "aws_lb_target_group_attachment" "lb_group_attachment" {
+
   target_group_arn = aws_lb_target_group.lb_target_group.arn
-  # target_id        = data.aws_instances.this.ids[count.index] #data.aws_instance.this.id
-  target_id = var.instance_id
+  target_id        = var.instance_id
   port             = 80
 }
