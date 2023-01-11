@@ -1,5 +1,5 @@
 variable "cidr_id" {
-  type = string
+  type        = string
   description = "cidr for vpc"
 }
 variable "public_subnet" {
