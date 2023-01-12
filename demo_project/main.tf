@@ -19,9 +19,9 @@ module "application_lb" {
   lb_target_type     = "instance"
   vpc_id             = module.huyn_vpc.vpc_id
   security_groups    = [module.huyn_vpc.hsg]
-  instance_id        = aws_instance.instance1.id
+
 }
-# Instance
+# AMI
 data "aws_ami" "ami_linux" {
 
   most_recent = true
@@ -37,11 +37,19 @@ data "aws_ami" "ami_linux" {
 }
 # Autoscaling
 module "auto_scaling" {
-  source         = "../modules/Autoscaling"
-  project        = local.project
-  image_id       = data.aws_ami.ami_linux
-  key_name       = aws_key_pair.auth
-  security_group = [module.huyn_vpc.hsg]
+  source                = "../modules/Autoscaling"
+  project               = local.project
+  image_id              = data.aws_ami.ami_linux.id
+  instance_type         = "t2.micro"
+  key_name              = aws_key_pair.auth.id
+  security_group        = [module.huyn_vpc.hsg]
+  max_size              = 3
+  min_size              = 1
+  desired_capacity      = 1
+  asg_health_check_type = "ELB"
+  lb_subnets            = [module.huyn_vpc.private_sub[0], module.huyn_vpc.private_sub[1]]
+  target_group_arns     = [module.application_lb.lb_target_group_arn]
+
 }
 # get pem file
 resource "tls_private_key" "huyn_key" {
@@ -67,15 +75,18 @@ resource "aws_instance" "bastion" {
   security_groups             = [module.huyn_vpc.hsg]
   associate_public_ip_address = true
   key_name                    = aws_key_pair.auth.id
-  provisioner "local-exec" {
-    on_failure = fail #continue 
-    command    = "echo ip: ${aws_instance.bastion.public_ip} > Bastion.txt"
-  }
+  # provisioner "local-exec" {
+  #   on_failure = fail #continue 
+  #   command    = "echo ip: ${aws_instance.bastion.public_ip} > Bastion.txt"
+  # }
   tags = {
     "Name" = "bastion"
   }
 }
-
+resource "local_file" "ip_intance1" {
+  content  = aws_instance.bastion.public_ip
+  filename = "public.txt"
+}
 # resource "aws_instance" "instance1" {
 #   ami                         = data.aws_ami.ami_linux.id
 #   instance_type               = "t2.micro"
@@ -98,32 +109,6 @@ resource "aws_instance" "bastion" {
 #                 sudo bash -c  "echo '<center><h1>I am huy</h1></center>' > /var/www/html/index.html"
 #                 EOF
 # }
-resource "aws_instance" "bastion" {
-  ami                         = data.aws_ami.ami_linux.id
-  instance_type               = "t2.micro"
-  subnet_id                   = module.huyn_vpc.public_sub[0]
-  security_groups             = [module.huyn_vpc.hsg]
-  associate_public_ip_address = true
-  key_name                    = aws_key_pair.auth.id
-  provisioner "local-exec" {
-    on_failure = fail #continue 
-    command    = "echo ip: ${aws_instance.bastion.public_ip} > Bastion.txt"
-  }
-  tags = {
-    "Name" = "bastion"
-  }
-}
-# load balancer
-module "application_lb" {
-  source             = "../_module/alb"
-  lb_name            = "huyn-lb"
-  load_balancer_type = "application"
-  subnets            = [module.huyn_vpc.public_sub[0], module.huyn_vpc.public_sub[1]]
-  lb_target_type     = "instance"
-  vpc_id             = module.huyn_vpc.vpc_id
-  security_groups    = [module.huyn_vpc.hsg]
-  instance_id        = aws_instance.instance1.id
-}
 # resource "null_resource" "execute" {
 #   connection {
 #     type = "ssh"
@@ -140,7 +125,4 @@ module "application_lb" {
 #     aws_instance.instance1
 #   ]
 # }
-# resource "local_file" "ip_intance1" { 
-#   content =  aws_instance.instance1.public_ip
-#   filename = "key_ip/jenkins.txt"
-# }
+

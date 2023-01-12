@@ -25,5 +25,5 @@ variable "vpc_id" {
   type        = string
   default     = null
 }
-variable "instance_id" {}
+
 

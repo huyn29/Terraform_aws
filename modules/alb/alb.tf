@@ -64,9 +64,9 @@ resource "aws_lb_listener" "huyn_lb" {
   }
 }
 
-resource "aws_lb_target_group_attachment" "lb_group_attachment" {
+# resource "aws_lb_target_group_attachment" "lb_group_attachment" {
 
-  target_group_arn = aws_lb_target_group.lb_target_group.arn
-  target_id        = var.instance_id
-  port             = 80
-}
+#   target_group_arn = aws_lb_target_group.lb_target_group.arn
+#   target_id        = var.instance_id
+#   port             = 80
+# }
