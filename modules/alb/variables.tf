@@ -1,29 +1,7 @@
-variable "lb_name" {
-  description = "name for load balancer"
-  type        = string
-}
-variable "load_balancer_type" {
-  description = "Application or Network type LB"
-  type        = string
-}
-variable "security_groups" {
-  description = "sg for load balancer"
-}
-variable "subnets" {
-  description = "LB subnets"
-  type        = list(string)
-  default     = []
-}
-
-variable "lb_target_type" {
-  description = "Target type ip (ALB/NLB), instance (Autosaling group)"
-  type        = string
-}
-
-variable "vpc_id" {
-  description = "vpc_id"
-  type        = string
-  default     = null
-}
-
-
+# Application load balancer
+variable "project" {}
+variable "load_balancer_type" {}
+variable "security_groups" {}
+variable "subnets" {}
+variable "lb_target_type" {}
+variable "vpc_id" {}

@@ -1,6 +1,6 @@
-resource "aws_security_group" "huyn_sg" {
-  name   = "huyn sg"
-  vpc_id = aws_vpc.huyn_vpc.id
+resource "aws_security_group" "this" {
+  name   = "${var.project}-sg"
+  vpc_id = aws_vpc.this.id
   # input
   ingress {
     from_port   = 80
@@ -28,6 +28,6 @@ resource "aws_security_group" "huyn_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    "Name" = "Huyn_sg"
+    "Name" = "${var.project}-sg"
   }
 }

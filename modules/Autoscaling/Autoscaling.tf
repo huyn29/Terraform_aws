@@ -39,6 +39,11 @@ resource "aws_autoscaling_group" "this" {
     id      = aws_launch_template.this.id
     version = aws_launch_template.this.latest_version #"$Latest"
   }
+  tag {
+    key                 = "Name"
+    value               = "huyn"
+    propagate_at_launch = true
+  }
 }
 
 # scale up policy

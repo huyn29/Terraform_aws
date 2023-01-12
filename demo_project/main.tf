@@ -1,24 +1,26 @@
+# Local variable
 locals {
   project = "demo"
 }
 # Networking
-module "huyn_vpc" {
+module "aws_vpc" {
   source         = "../modules/vpc"
+  project        = local.project
   cidr_id        = "10.0.0.0/16"
-  public_subnet  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  private_subnet = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
-  az_list        = ["us-east-1a", "us-east-1b", "us-east-1c"]
+  public_subnet  = ["10.0.1.0/24", "10.0.2.0/24"]
+  private_subnet = ["10.0.3.0/24", "10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
+  az_list        = ["us-east-1a", "us-east-1b", "us-east-1a", "us-east-1b"]
 
 }
 # load balancer
 module "application_lb" {
   source             = "../modules/alb"
-  lb_name            = "huyn-lb"
+  project            = local.project
   load_balancer_type = "application"
-  subnets            = [module.huyn_vpc.public_sub[0], module.huyn_vpc.public_sub[1]]
+  subnets            = [module.aws_vpc.public_sub[0], module.aws_vpc.public_sub[1]]
   lb_target_type     = "instance"
-  vpc_id             = module.huyn_vpc.vpc_id
-  security_groups    = [module.huyn_vpc.hsg]
+  vpc_id             = module.aws_vpc.vpc_id
+  security_groups    = [module.aws_vpc.hsg]
 
 }
 # AMI
@@ -42,12 +44,12 @@ module "auto_scaling" {
   image_id              = data.aws_ami.ami_linux.id
   instance_type         = "t2.micro"
   key_name              = aws_key_pair.auth.id
-  security_group        = [module.huyn_vpc.hsg]
+  security_group        = [module.aws_vpc.hsg]
   max_size              = 3
   min_size              = 1
   desired_capacity      = 1
   asg_health_check_type = "ELB"
-  lb_subnets            = [module.huyn_vpc.private_sub[0], module.huyn_vpc.private_sub[1]]
+  lb_subnets            = [module.aws_vpc.private_sub[0], module.aws_vpc.private_sub[1]]
   target_group_arns     = [module.application_lb.lb_target_group_arn]
 
 }
@@ -71,8 +73,8 @@ resource "aws_key_pair" "auth" {
 resource "aws_instance" "bastion" {
   ami                         = data.aws_ami.ami_linux.id
   instance_type               = "t2.micro"
-  subnet_id                   = module.huyn_vpc.public_sub[0]
-  security_groups             = [module.huyn_vpc.hsg]
+  subnet_id                   = module.aws_vpc.public_sub[0]
+  security_groups             = [module.aws_vpc.hsg]
   associate_public_ip_address = true
   key_name                    = aws_key_pair.auth.id
   # provisioner "local-exec" {
@@ -85,13 +87,20 @@ resource "aws_instance" "bastion" {
 }
 resource "local_file" "ip_intance1" {
   content  = aws_instance.bastion.public_ip
-  filename = "public.txt"
+  filename = "key-ip/public_ip.txt"
+}
+# Database
+module "rds_db" {
+  source    = "../modules/rds"
+  project   = local.project
+  db_subnet = [module.aws_vpc.private_sub[2], module.aws_vpc.private_sub[3]]
+  vpc_id    = module.aws_vpc.vpc_id
 }
 # resource "aws_instance" "instance1" {
 #   ami                         = data.aws_ami.ami_linux.id
 #   instance_type               = "t2.micro"
-#   subnet_id                   = module.huyn_vpc.private_sub[1]
-#   security_groups             = [module.huyn_vpc.hsg]
+#   subnet_id                   = module.aws_vpc.private_sub[1]
+#   security_groups             = [module.aws_vpc.hsg]
 #   associate_public_ip_address = true
 #   key_name                    = aws_key_pair.auth.id
 #   provisioner "local-exec" {

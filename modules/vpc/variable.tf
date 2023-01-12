@@ -1,7 +1,5 @@
-variable "cidr_id" {
-  type        = string
-  description = "cidr for vpc"
-}
+variable "project" {}
+variable "cidr_id" {}
 variable "public_subnet" {
   type = list(string)
 }
